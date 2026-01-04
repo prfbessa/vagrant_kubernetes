@@ -1,0 +1,36 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/bookworm64"
+
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    config.vbguest.auto_update = false
+  end
+
+  # Ajuste os nomes para bater com seu ambiente
+  nodes = [
+    { name: "kbmaster", ip: "192.168.56.10", cpus: 2, mem: 4096 },
+    { name: "kbnode01", ip: "192.168.56.11", cpus: 2, mem: 4000 },
+    { name: "kbnode02", ip: "192.168.56.12", cpus: 2, mem: 4000 } # Note o "kbode" conforme seu log
+  ]
+
+  nodes.each do |node|
+    config.vm.define node[:name] do |node_config|
+      node_config.vm.hostname = node[:name]
+      node_config.vm.network "private_network", ip: node[:ip]
+      node_config.vm.disk :disk, size: "25GB", name: "storage"
+
+      node_config.vm.provider "virtualbox" do |vb|
+        vb.memory = node[:mem]
+        vb.cpus = node[:cpus]
+      end
+
+      node_config.vm.provision "shell", path: "common.sh"
+
+      # CORREÇÃO AQUI: O nome deve ser "kbmaster"
+      if node[:name] == "kbmaster"
+        node_config.vm.provision "shell", path: "master.sh"
+      else
+        node_config.vm.provision "shell", path: "node.sh"
+      end
+    end
+  end
+end

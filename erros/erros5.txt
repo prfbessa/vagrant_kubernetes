@@ -1,0 +1,23 @@
+vagrant@kbmaster:~$ mkdir -p $HOME/.kube
+vagrant@kbmaster:~$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+vagrant@kbmaster:~$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+vagrant@kbmaster:~$ kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+namespace/kube-flannel created
+serviceaccount/flannel created
+clusterrole.rbac.authorization.k8s.io/flannel created
+clusterrolebinding.rbac.authorization.k8s.io/flannel created
+configmap/kube-flannel-cfg created
+daemonset.apps/kube-flannel-ds created
+vagrant@kbmaster:~$ echo "sudo kubeadm join 10.0.2.15:6443 --token xn9ilf.ioret7bda2cm2q03 \
+        --discovery-token-ca-cert-hash sha256:aa021ff9d27f78562a283ee735b2b2ae52fcec99bc597823f5179e40589cfb7c" > /vagrant/join.sh
+vagrant@kbmaster:~$     kbmaster: [preflight] Running pre-flight checks
+                                                                           kbmaster: error execution phase preflight: [preflight] Some fatal errors occurred:
+                                         kbmaster:      [ERROR FileAvailable--etc-kubernetes-kubelet.conf]: /etc/kubernetes/kubelet.conf already exists
+                                   kbmaster:    [ERROR Port-10250]: Port 10250 is in use
+                                                                                            kbmaster:   [ERROR FileAvailable--etc-kubernetes-pki-ca.crt]: /etc/kubernetes/pki/ca.crt already exists
+                                                                               kbmaster: [preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
+                                                                                    kbmaster: To see the stack trace of this error execute with --v=5 or higher
+                                       The SSH command responded with a non-zero exit status. Vagrant
+                                                                                                     assumes that this means the command failed. The output for this command
+                                                    should be in the log above. Please read the output to determine what
+                                                                                                                       went wrong.
