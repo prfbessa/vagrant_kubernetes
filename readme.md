@@ -87,3 +87,59 @@ inutos. O script de provisionamento (master.sh) demora um pouco para inicializar
 OBS: para recriar os nodes pelo vagrant up o processo todo pode dermorar uns 20 min.
 aguardar até a criação do node02
 
+========================================================================
+# nova versão otimizando o tempo - não ficou bom usar o sem otimização
+========================================================================
+
+Proposta de Melhoria: VMs primeiro, Provisionamento depois
+Sim, sua ideia de criar as VMs primeiro e depois instalar o Kubernetes é a melhor abordagem para estabilizar clusters locais. Isso evita  
+que o Vagrant tente baixar e instalar pacotes em uma VM enquanto a outra ainda está brigando por CPU para ligar.
+
+1. Alteração no Vagrantfile para Agilidade
+Podemos aumentar ligeiramente o tempo de espera e configurar o Vagrant para não tentar subir tudo simultaneamente se o seu hardware 
+estiver sofrendo.
+
+2. Estratégia de Execução Otimizada
+Para tornar o processo mais ágil e evitar os loops de erro do preflight, utilize estes comandos em sequência no seu terminal:
+
+# Crie as VMs sem rodar os scripts (Apenas a infraestrutura): 
+vagrant up --no-provision 
+# Isso garante que todas as 3 VMs estejam ligadas e com a rede estável antes de qualquer instalação.
+
+# Execute o provisionamento de forma isolada: 
+vagrant provision 
+# Como as máquinas já estarão "quentes" e com o hardware estabilizado, a taxa de sucesso do join será muito maior e mais rápida.
+
+## Por que isso melhora o projeto?
+
+Redução de Contenção: O VirtualBox consome muita CPU ao "bootar" uma VM Debian. Fazer o boot de todas primeiro garante que a CPU esteja 
+livre para os scripts de instalação depois.
+
+Rede Sincronizada: O erro de "TLS handshake" acontece quando o serviço de rede ainda não terminou de subir completamente. Com as VMs já 
+ligadas, a rede 'eth1' estará pronta para o tráfego do Kubernetes imediatamente.
+
+Podemos ajustar o tempo de sleep no seu node.sh para ser ainda mais resiliente se preferir.
+
+# obs: para desligar a VM atual 
+vagrant halt
+
+========================================================================
+
+Ótimo! Para que você consiga acessar o seu servidor Apache (httpd) de fora do cluster (diretamente pelo seu navegador no Windows), 
+precisamos de um objeto chamado Service.
+
+Como o seu cluster utiliza uma rede privada (192.168.56.x), usaremos o tipo NodePort. Isso fará com que o Kubernetes abra uma porta 
+específica em todos os nós do cluster, encaminhando o tráfego para os seus Pods.
+
+1. Criar o arquivo simple-service.yml
+# Crie este novo arquivo na mesma pasta do seu projeto com o seguinte conteúdo:
+
+2. Aplicar e Verificar
+Execute os seguintes comandos no terminal do kbmaster:
+
+# Aplicar o serviço: 
+kubectl apply -f simple-service.yml
+
+# Verificar se o serviço está ativo: 
+kubectl get svc app-html-service
+

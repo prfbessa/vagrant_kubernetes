@@ -4,15 +4,15 @@ Vagrant.configure("2") do |config|
   # A pasta no host será mapeada para /home/vagrant/kubernetes2 dentro da VM.
   config.vm.synced_folder "C:/projetos_vagrant/kubernetes1", "/home/vagrant/kubernetes1"
 
+  # Desativa atualização de Guest Additions para ganhar tempo
   if Vagrant.has_plugin?("vagrant-vbguest")
     config.vbguest.auto_update = false
   end
 
-  # Ajuste os nomes para bater com seu ambiente
   nodes = [
     { name: "kbmaster", ip: "192.168.56.10", cpus: 2, mem: 4096 },
     { name: "kbnode01", ip: "192.168.56.11", cpus: 2, mem: 4000 },
-    { name: "kbnode02", ip: "192.168.56.12", cpus: 2, mem: 4000 } # Note o "kbode" conforme seu log
+    { name: "kbnode02", ip: "192.168.56.12", cpus: 2, mem: 4000 }
   ]
 
   nodes.each do |node|
@@ -24,11 +24,14 @@ Vagrant.configure("2") do |config|
       node_config.vm.provider "virtualbox" do |vb|
         vb.memory = node[:mem]
         vb.cpus = node[:cpus]
+        # MELHORIA: Melhora a performance de disco e rede no VirtualBox
+        vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+        vb.customize ["modifyvm", :id, "--ioapic", "on"]
       end
 
+      # Script de instalação comum (Executa em todos)
       node_config.vm.provision "shell", path: "common.sh"
 
-      # CORREÇÃO AQUI: O nome deve ser "kbmaster"
       if node[:name] == "kbmaster"
         node_config.vm.provision "shell", path: "master.sh"
       else
