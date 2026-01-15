@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-pod
+  labels:
+    name: mysql-pod
+    #app: mysql
+spec:
+  containers:
+  - name: mysql
+    image: mysql:8.0  # Versão recomendada para estabilidade
+    ports:
+    - containerPort: 3306
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      value: "Senha123" # Em produção, use Kubernetes Secrets
+    - name: MYSQL_DATABASE
+      value: "meuBanco"

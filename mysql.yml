@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  # strategy:
+  #   type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+          # usando Secrets
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+          secretKeyRef:
+            name: my-secret
+            key: ROOT_PASSWORD
+
+        - name: MYSQL_DATABASE
+          valueFrom:
+          secretKeyRef:
+            name: my-secret
+            key: MYSQL_DATABASE
+
+        ports:
+        - containerPort: 3306
+          name: mysql
+
+        volumeMounts:
+        - name: local
+          mountPath: /var/lib/mysql
+
+      # meu diretorio local dentro do node sem PV e PVC 
+      # volumes:
+      # - name: local
+      #   hostPath:
+      #     path: /meubanco/
+
+      # utilizando PV e PVC
+      volumes:
+      - name: local
+        persistentVolumeClaim:
+          claimName: local
